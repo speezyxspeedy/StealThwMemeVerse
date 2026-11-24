@@ -1,0 +1,92 @@
+// Production-ready PostgreSQL / Prisma schema for Steal the Memeverse
+// Connect via DATABASE_URL in .env when provisioning an external Postgres database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  username     String         @unique
+  sessionToken String         @unique
+  role         String         @default("PLAYER")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  profile      PlayerProfile?
+  sentTrades   Trade[]        @relation("SentTrades")
+  recvTrades   Trade[]        @relation("RecvTrades")
+  transactions Transaction[]
+}
+
+model PlayerProfile {
+  id               String          @id @default(cuid())
+  userId           String          @unique
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarColor      String          @default("#38bdf8")
+  skinId           String          @default("classic")
+  baseTheme        String          @default("theme-marble")
+  coins            BigInt          @default(220)
+  gems             Int             @default(20)
+  totalEarned      BigInt          @default(220)
+  level            Int             @default(1)
+  xp               Int             @default(0)
+  rebirths         Int             @default(0)
+  stealsCount      Int             @default(0)
+  timesStolenFrom  Int             @default(0)
+  dailyStreak      Int             @default(0)
+  lastDailyClaimAt DateTime?
+  upgradesJson     Json            @default("{}")
+  memelings        OwnedMemeling[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([rebirths, coins])
+}
+
+model OwnedMemeling {
+  id         String        @id @default(cuid())
+  profileId  String
+  profile    PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  creatureId String
+  mutation   String        @default("normal")
+  level      Int           @default(1)
+  slotIndex  Int
+  locked     Boolean       @default(false)
+  favorite   Boolean       @default(false)
+  stolenFrom String?
+  acquiredAt DateTime      @default(now())
+
+  @@index([profileId])
+}
+
+model Trade {
+  id           String   @id @default(cuid())
+  fromUserId   String
+  toUserId     String
+  fromUser     User     @relation("SentTrades", fields: [fromUserId], references: [id])
+  toUser       User     @relation("RecvTrades", fields: [toUserId], references: [id])
+  fromItems    Json
+  toItems      Json
+  status       String   @default("COMPLETED")
+  completedAt  DateTime @default(now())
+
+  @@index([fromUserId, toUserId])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  currency  String
+  delta     BigInt
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}

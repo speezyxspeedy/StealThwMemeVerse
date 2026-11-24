@@ -1,0 +1,6 @@
+{
+  "name": "Steal the Memeverse",
+  "description": "A 3D multiplayer tycoon and heist browser game where you collect bizarre Memelings off a live conveyor, build and lock your base, raid rival tycoons, and rebirth your empire.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
